@@ -3,6 +3,7 @@ const router = express.Router();
 const Order = require('../models/order');
 const Customer = require('../models/customer');
 const Book = require('../models/book');
+const jwt = require('jsonwebtoken')
 // Get all orders
 router.get('/', async (req, res) => {
   try {
@@ -49,10 +50,25 @@ router.get('/:id', async (req, res) => {
     }
   });
 
-
+const autheticateUser = (req,res,next) => {
+    const authHeader = req.headers.authorization;
+  if (authHeader) {
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.USER_SECRET, (err, user) => {
+      if (err) {
+        return res.sendStatus(403);
+        console.log("InValid User");
+      }
+      console.log("Valid User");
+      next();
+    });
+  } else {
+    res.sendStatus(401);
+  }
+}
 
 // Create a new order
-router.post('/', async (req, res) => {
+router.post('/', autheticateUser, async (req, res) => {
   const order = new Order({
     orderDate: req.body.orderDate,
     bookId: req.body.bookId,
