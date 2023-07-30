@@ -31,5 +31,64 @@ router.post('/', async (req, res) => {
 });
 
 // More endpoints (e.g., get single book by ID, update book, delete book) can be added here
+// Search books by keywords
+router.get('/search', async (req, res) => {
+  const { keywords } = req.query;
+  const query = {};
+
+  if (keywords) {
+    query.$or = [
+      { title: { $regex: keywords, $options: 'i' } },
+      { author: { $regex: keywords, $options: 'i' } },
+      { description: { $regex: keywords, $options: 'i' } },
+    ];
+  }
+
+  try {
+    const books = await Book.find(query);
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Filter books by category
+router.get('/filter', async (req, res) => {
+  const { category } = req.query;
+  const query = {};
+
+  if (category) {
+    query.category = category;
+  }
+
+  try {
+    const books = await Book.find(query);
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Sort books by price
+router.get('/sort', async (req, res) => {
+  const { sortByPrice } = req.query;
+
+  try {
+    let books;
+
+    if (sortByPrice === 'asc') {
+      books = await Book.find().sort({ price: 1 });
+    } else if (sortByPrice === 'desc') {
+      books = await Book.find().sort({ price: -1 });
+    } else {
+      books = await Book.find();
+    }
+
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}); 
+
 
 module.exports = router;
